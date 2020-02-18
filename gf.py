@@ -1,3 +1,6 @@
+import itertools
+
+
 def add(pol1, pol2):
     n1 = len(pol1)
     n2 = len(pol2)
@@ -15,7 +18,8 @@ def mult(pol1, pol2):
     for n, x in enumerate(reversed(pol2)):
         if x == 1:
             pols.append(pol1 + (0,) * n)
-    return sum_pols(*pols) if len(pols) != 1 else pols[0]
+    res = sum_pols(*pols) if len(pols) != 1 else pols[0]
+    return rem_zeros(res)
 
 
 def power(*pols):
@@ -54,7 +58,7 @@ def div(pol1, pol2):
     p1, p2 = power(pol1), power(pol2)
 
     if p1 < p2:
-        raise Exception('беды с башкой')
+        return (0,), pol1
 
     quotient = ()
     while p1 >= p2:
@@ -67,3 +71,25 @@ def div(pol1, pol2):
     return quotient, pol1
 
 
+def generate_pols(k):
+    return [rem_zeros(pol) for pol in itertools.product((0, 1), repeat=k)]
+
+
+def mult_table_op(pol1, pol2, pol):
+    _, remainder = div(mult(pol1, pol2), pol)
+    return remainder
+
+
+def mult_table(k, pol):
+    if k < 2 or k > 4:
+        raise Exception('беды с башкой')
+
+    pols = generate_pols(k)
+    return pols, [[mult_table_op(pol1, pol2, pol) for i, pol2 in enumerate(pols)]
+                     for j, pol1 in enumerate(pols)]
+
+
+if __name__ == '__main__':
+    # print(mult_table_op((1,), (1, 1, 0), (1, 1, 0, 1)))
+    for row in mult_table(3, (1, 1, 0, 1)):
+        print(row)

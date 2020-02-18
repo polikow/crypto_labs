@@ -42,7 +42,7 @@ def polynomial(pol: tuple):
             else:
                 buf.append(str(x))
             if plus(power, pol):
-                buf.append(' + ')
+                buf.append('+')
 
     return ''.join(buf)
 
