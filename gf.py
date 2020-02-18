@@ -65,3 +65,5 @@ def div(pol1, pol2):
         p1 = new_p
 
     return quotient, pol1
+
+

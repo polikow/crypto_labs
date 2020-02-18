@@ -48,13 +48,10 @@ def polynomial(pol: tuple):
 
 
 def polynomial_01(pol: tuple):
-    buf = []
-    for x in pol:
-        buf.append(str(x))
-    return ''.join(buf)
+    return ''.join([str(x) for x in pol])
 
 
-def mult_string(pol1, pol2):
+def mult_str(pol1, pol2):
     length = power(pol1, pol2) + 1
     buf_adds = []
     pols = []
