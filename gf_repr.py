@@ -31,12 +31,13 @@ def table_str(k, pol):
         else:
             new_buf.append('{:^{width}}|'.format(header, width=width) + row)
     new_buf.append('\n')
+
     return '\n'.join(
         ['Таблица умножения в GF(2{}) c образующим многочленом {} ({})'.format(superscript(k),pol_01(pol),pol_str(pol))]
         + new_buf)
 
 
-def test():
+def main():
     print(mult_str2((1, 1, 1, 0), (1, 0, 1)))
     print(div_str((1, 1, 1, 0), (1, 0, 1)))
     print(table_str(3, (1, 1, 0, 1)))
@@ -45,4 +46,4 @@ def test():
 
 
 if __name__ == '__main__':
-    test()
+    main()

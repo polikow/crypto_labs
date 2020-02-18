@@ -1,4 +1,5 @@
 import itertools
+from math import gcd
 
 
 def add(pol1, pol2):
@@ -57,6 +58,9 @@ def calc_quotient(new_p, p1, p2):
 def div(pol1, pol2):
     p1, p2 = power(pol1), power(pol2)
 
+    if p2 == 0 and pol2[0] == 0:
+        raise Exception('беды с башкой')
+
     if p1 < p2:
         return (0,), pol1
 
@@ -67,6 +71,8 @@ def div(pol1, pol2):
         quotient += calc_quotient(new_p, p1, p2)
         pol1 = new_pol
         p1 = new_p
+        if pol1 == (0,):
+            break
 
     return quotient, pol1
 
@@ -86,10 +92,64 @@ def mult_table(k, pol):
 
     pols = generate_pols(k)
     return pols, [[mult_table_op(pol1, pol2, pol) for i, pol2 in enumerate(pols)]
-                     for j, pol1 in enumerate(pols)]
+                  for j, pol1 in enumerate(pols)]
+
+
+def generate_power(k):
+    return (1,) + (0,) * k
+
+
+def primitive_op(pol1, pol):
+    _, remainder = div(pol1, pol)
+    return remainder
+
+
+def euler(a):
+    res = 0
+    for num in range(1, a):
+        if gcd(a, num) == 1:
+            res += 1
+    return res
+
+
+def is_prime(pol):
+    """Неприводимый ли многочлен"""
+    for pol2 in generate_pols(power(pol) - 1)[2:]:
+        _, rem = div(pol, pol2)
+        if rem == (0,):
+            return False
+    return True
+
+
+def primes(k):
+    for pol in filter(lambda x: 1 if power(x) > 0 else 0, generate_pols(k)):
+        if is_prime(pol):
+            yield pol
+
+
+def is_primitive(pol):
+    if not is_prime(pol):
+        return False
+
+    n = power(pol)
+    start = n + 1
+    stop = 2 ** n - 2
+
+    for q in range(start, stop + 1, 1):
+        tmp = (1,) + (0,) * (q - 1) + (1,)
+        _, rem = div(tmp, pol)
+        if rem == (0,):
+            return False
+
+    return True
 
 
 if __name__ == '__main__':
     # print(mult_table_op((1,), (1, 1, 0), (1, 1, 0, 1)))
-    for row in mult_table(3, (1, 1, 0, 1)):
-        print(row)
+
+    # for row in mult_table(3, (1, 1, 0, 1)):
+    #     print(row)
+    # print(is_primitive((1,)))
+    # print(is_prime((1, 0)))
+    print(is_prime())
+
