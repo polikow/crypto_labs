@@ -1,4 +1,4 @@
-from gf import add, mult, div, mult_table
+from gf import add, mult, div, mult_table, gf_elements, is_primitive, euler
 from polynomial_repr import polynomial as pol_str, polynomial_01 as pol_01, \
     mult_str, superscript
 
@@ -6,11 +6,11 @@ from polynomial_repr import polynomial as pol_str, polynomial_01 as pol_01, \
 def div_str(a, b):
     q, r = div(a, b)
     a, b, q, r = pol_str(a), pol_str(b), pol_str(q), pol_str(r)
-    return "({})/({}) = ({})({}) + ({})".format(a, b, q, b, r)
+    print("({})/({}) = ({})({}) + ({})".format(a, b, q, b, r))
 
 
 def mult_str2(a, b):
-    return '({})({}) = {}'.format(pol_str(a), pol_str(b), pol_str(mult(a, b)))
+    print('({})({}) = {}'.format(pol_str(a), pol_str(b), pol_str(mult(a, b))))
 
 
 def table_str(k, pol):
@@ -32,17 +32,32 @@ def table_str(k, pol):
             new_buf.append('{:^{width}}|'.format(header, width=width) + row)
     new_buf.append('\n')
 
-    return '\n'.join(
-        ['Таблица умножения в GF(2{}) c образующим многочленом {} ({})'.format(superscript(k),pol_01(pol),pol_str(pol))]
-        + new_buf)
+    print('\n'.join(
+        ['Таблица умножения в GF(2{}) c образующим многочленом {} ({})'.format(superscript(k), pol_01(pol),
+                                                                               pol_str(pol))]
+        + new_buf))
+
+
+def gf_elements_str(k, pol):
+    buf = []
+    for i, elem in enumerate(gf_elements(k, pol)):
+        buf.append("x{} = {} {}".format(superscript(i), pol_str(elem), ' примитивный' if is_primitive(elem) else ''))
+    print("примитивные элементы ({} эл-ов) GF(2{}) для образующего многочлена {} ({})".format(euler(2 ** k - 1),
+                                                                                              superscript(k),
+                                                                                              pol_01(pol),
+                                                                                              pol_str(pol)))
+    print('\n'.join(buf), '\n')
 
 
 def main():
-    print(mult_str2((1, 1, 1, 0), (1, 0, 1)))
-    print(div_str((1, 1, 1, 0), (1, 0, 1)))
-    print(table_str(3, (1, 1, 0, 1)))
-    print(table_str(3, (1, 0, 1, 1)))
-    print(table_str(4, (1, 1, 0, 0, 1)))
+    # mult_str2((1, 1, 1, 0), (1, 0, 1))
+    # div_str((1, 1, 1, 0), (1, 0, 1))
+    table_str(3, (1, 1, 0, 1))
+    # table_str(3, (1, 0, 1, 1))
+    table_str(4, (1, 1, 0, 0, 1))
+    gf_elements_str(3, (1, 1, 0, 1))
+    gf_elements_str(4, (1, 1, 0, 0, 1))
+    gf_elements_str(4, (1, 0, 0, 1, 1))
 
 
 if __name__ == '__main__':

@@ -114,7 +114,10 @@ def euler(a):
 
 def is_prime(pol):
     """Неприводимый ли многочлен"""
-    for pol2 in generate_pols(power(pol) - 1)[2:]:
+    if power(pol) == 0:
+        return False
+
+    for pol2 in filter(lambda x: 1 if power(x) > 0 else 0, generate_pols(power(pol) - 1)):
         _, rem = div(pol, pol2)
         if rem == (0,):
             return False
@@ -144,12 +147,22 @@ def is_primitive(pol):
     return True
 
 
+def gf_elements(k, pol):
+    """Элементы поля 2^k для образующего многочлена pol"""
+    n = 2 ** k
+    pols = []
+    for i in range(n):
+        _, remainder = div((1,) + (0,) * i, pol)
+        pols.append(remainder)
+    return pols
+
+
 if __name__ == '__main__':
+    ...
     # print(mult_table_op((1,), (1, 1, 0), (1, 1, 0, 1)))
 
     # for row in mult_table(3, (1, 1, 0, 1)):
     #     print(row)
-    # print(is_primitive((1,)))
-    # print(is_prime((1, 0)))
-    print(is_prime())
 
+
+    # print(is_prime((1, 0)))
