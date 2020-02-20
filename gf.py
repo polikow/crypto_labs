@@ -1,5 +1,5 @@
 import itertools
-from math import gcd
+import math
 
 
 def add(pol1, pol2):
@@ -107,7 +107,7 @@ def primitive_op(pol1, pol):
 def euler(a):
     res = 0
     for num in range(1, a):
-        if gcd(a, num) == 1:
+        if math.gcd(a, num) == 1:
             res += 1
     return res
 
@@ -157,12 +157,26 @@ def gf_elements(k, pol):
     return pols
 
 
+def gcd(pol1, pol2):
+    p1, p2 = power(pol1), power(pol2)
+    if p1 < p2:
+        return gcd(pol2, pol1)
+    else:
+        quotient, remainder = div(pol1, pol2)
+        if remainder == (0,):
+            return quotient
+        else:
+            return gcd(pol2, remainder)
+
+
 if __name__ == '__main__':
     ...
     # print(mult_table_op((1,), (1, 1, 0), (1, 1, 0, 1)))
 
     # for row in mult_table(3, (1, 1, 0, 1)):
     #     print(row)
+    from polynomial_repr import polynomial
 
-
+    for prime in primes(5):
+        print(polynomial(prime))
     # print(is_prime((1, 0)))

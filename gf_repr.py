@@ -42,6 +42,7 @@ def gf_elements_str(k, pol):
     buf = []
     for i, elem in enumerate(gf_elements(k, pol)):
         buf.append("x{} = {} {}".format(superscript(i), pol_str(elem), ' примитивный' if is_primitive(elem) else ''))
+
     print("примитивные элементы ({} эл-ов) GF(2{}) для образующего многочлена {} ({})".format(euler(2 ** k - 1),
                                                                                               superscript(k),
                                                                                               pol_01(pol),
@@ -53,11 +54,13 @@ def main():
     # mult_str2((1, 1, 1, 0), (1, 0, 1))
     # div_str((1, 1, 1, 0), (1, 0, 1))
     table_str(3, (1, 1, 0, 1))
-    # table_str(3, (1, 0, 1, 1))
+    table_str(3, (1, 0, 1, 1))
     table_str(4, (1, 1, 0, 0, 1))
     gf_elements_str(3, (1, 1, 0, 1))
     gf_elements_str(4, (1, 1, 0, 0, 1))
     gf_elements_str(4, (1, 0, 0, 1, 1))
+    mult_str2((1, 1, 1, 1, 1), (1, 1))
+    mult_str2((1, 0, 1, 1), (1, 1))
 
 
 if __name__ == '__main__':
