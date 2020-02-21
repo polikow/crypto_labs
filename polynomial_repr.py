@@ -1,3 +1,5 @@
+import math
+
 from gf import sum_pols, power
 
 superscript_map = {
@@ -10,9 +12,32 @@ superscript_translation = str.maketrans(
     ''.join(superscript_map.values()))
 
 
-def superscript(num):
+def superscript(num, one=False):
     res = str(num).translate(superscript_translation)
-    return res if res != "¹" else ''
+    if one:
+        return res
+    else:
+        return res if res != "¹" else ''
+
+
+def digits(num):
+    for i in range(math.ceil(math.log(num, 10)) - 1, -1, -1):
+        yield (num // (10 ** i)) % 10
+
+
+def only_01(pol):
+    for x in pol:
+        if not (x == 0 or x == 1):
+            raise Exception('беды с башкой')
+
+
+def num_to_polynomial(num):
+    if not isinstance(num, int):
+        raise Exception('беды с башкой')
+
+    pol = tuple(digits(num))
+    only_01(pol)
+    return pol
 
 
 def plus(power, pol):
@@ -69,3 +94,14 @@ def mult_str(pol1, pol2):
     buf.append('-' * length)
     buf.append('{:>{length}}'.format(polynomial_01(res), length=length))
     return '\n'.join(buf)
+
+
+def convert_pols(*pols):
+    res = []
+    for pol in pols:
+        if not isinstance(pol, tuple):
+            res.append(num_to_polynomial(pol))
+        else:
+            res.append(pol)
+
+    return res

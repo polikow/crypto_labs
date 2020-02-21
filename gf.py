@@ -20,7 +20,7 @@ def mult(pol1, pol2):
         if x == 1:
             pols.append(pol1 + (0,) * n)
     res = sum_pols(*pols) if len(pols) != 1 else pols[0]
-    return rem_zeros(res)
+    return rem_zeros(res)[1]
 
 
 def power(*pols):
@@ -44,18 +44,14 @@ def sum_pols(*pols):
 
 def rem_zeros(pol):
     try:
-        return pol[pol.index(1):]
+        i = pol.index(1)
+        return i, pol[i:]
     except ValueError:
-        return (0,)
-
-
-def calc_quotient(new_p, p1, p2):
-    if new_p >= p2:
-        return (1,) + (0,) * (p1 - new_p - 1)
-    return (1,)
+        return 0, (0,)
 
 
 def div(pol1, pol2):
+    P = power(pol1)
     p1, p2 = power(pol1), power(pol2)
 
     if p2 == 0 and pol2[0] == 0:
@@ -65,20 +61,38 @@ def div(pol1, pol2):
         return (0,), pol1
 
     quotient = ()
-    while p1 >= p2:
-        new_pol = rem_zeros(add(pol1, pol2 + (0,) * (p1 - p2)))
+    while p1 >= p2 and pol1 != (0,):
+        removed, new_pol = rem_zeros(add(pol1, pol2 + (0,) * (p1 - p2)))
         new_p = power(new_pol)
-        quotient += calc_quotient(new_p, p1, p2)
-        pol1 = new_pol
-        p1 = new_p
-        if pol1 == (0,):
+
+        if new_pol == (0,):
+            quotient += (1,)
+            pol1, p1 = new_pol, new_p
             break
 
+        if p1 != p2:
+            zeros = removed - 1
+        else:
+            zeros = 0
+        if new_p + 1 < zeros:
+            ...
+            if removed <= p2 + 1:
+                zeros -= 1
+        if zeros > (p1 - p2):
+            zeros = (p1 - p2)
+        quotient += (1,) + (0,) * zeros
+        pol1, p1 = new_pol, new_p
+
+    assert power(quotient) + power(pol2) == P
     return quotient, pol1
 
 
-def generate_pols(k):
-    return [rem_zeros(pol) for pol in itertools.product((0, 1), repeat=k)]
+def generate_pols(pow, min=0):
+    pols = [rem_zeros(pol)[1] for pol in itertools.product((0, 1), repeat=pow)]
+    if min == 0:
+        return pols
+    else:
+        return filter(lambda pol: 1 if power(pol) >= min else 0, pols)
 
 
 def mult_table_op(pol1, pol2, pol):
@@ -106,7 +120,7 @@ def primitive_op(pol1, pol):
 
 def euler(a):
     res = 0
-    for num in range(1, a):
+    for num in range(1, a + 1):
         if math.gcd(a, num) == 1:
             res += 1
     return res
@@ -114,23 +128,37 @@ def euler(a):
 
 def is_prime(pol):
     """Неприводимый ли многочлен"""
-    if power(pol) == 0:
+    p = power(pol)
+    if p == 0:
         return False
+    if p == 1:
+        return True
 
-    for pol2 in filter(lambda x: 1 if power(x) > 0 else 0, generate_pols(power(pol) - 1)):
+    max_p = int(math.sqrt(p) + 1)
+
+    for pol2 in generate_pols(max_p, min=1):
         _, rem = div(pol, pol2)
         if rem == (0,):
             return False
     return True
 
 
-def primes(k):
-    for pol in filter(lambda x: 1 if power(x) > 0 else 0, generate_pols(k)):
+def primes(pow):
+    """Генератор неприводимых многочленов"""
+    for pol in generate_pols(pow, min=1):
         if is_prime(pol):
             yield pol
 
 
+def mutually_prime(a, b):
+    """Взаимно простые числа"""
+    if a == 0 or b == 0:
+        return False
+    return math.gcd(a, b) == 1
+
+
 def is_primitive(pol):
+    """Неправильно работает"""
     if not is_prime(pol):
         return False
 
@@ -147,6 +175,19 @@ def is_primitive(pol):
     return True
 
 
+def gcd_gf(pol1, pol2):
+    """НОД для полиномов по АЕ"""
+    p1, p2 = power(pol1), power(pol2)
+    if p1 < p2:
+        return gcd_gf(pol2, pol1)
+    else:
+        quotient, remainder = div(pol1, pol2)
+        if remainder == (0,):
+            return pol2
+        else:
+            return gcd_gf(pol2, remainder)
+
+
 def gf_elements(k, pol):
     """Элементы поля 2^k для образующего многочлена pol"""
     n = 2 ** k
@@ -157,26 +198,15 @@ def gf_elements(k, pol):
     return pols
 
 
-def gcd(pol1, pol2):
-    p1, p2 = power(pol1), power(pol2)
-    if p1 < p2:
-        return gcd(pol2, pol1)
-    else:
-        quotient, remainder = div(pol1, pol2)
-        if remainder == (0,):
-            return quotient
-        else:
-            return gcd(pol2, remainder)
-
-
 if __name__ == '__main__':
-    ...
-    # print(mult_table_op((1,), (1, 1, 0), (1, 1, 0, 1)))
+    div((1, 1, 1, 1, 1, 1), (1, 1, 1))
+    div((1, 1, 1, 1), (1, 1, 1))
+    div((1, 1, 0, 1), (1, 0))
+    div((1, 1, 0, 1), (1, 1))
 
-    # for row in mult_table(3, (1, 1, 0, 1)):
-    #     print(row)
-    from polynomial_repr import polynomial
-
-    for prime in primes(5):
-        print(polynomial(prime))
-    # print(is_prime((1, 0)))
+    assert is_primitive((1, 1, 1))
+    assert is_primitive((1, 1, 0, 1))
+    assert is_primitive((1, 0, 0, 1, 1))
+    assert is_primitive((1, 0, 0, 1, 1))
+    assert is_primitive((1, 1, 0, 1, 1, 1))
+    assert is_primitive((1, 1, 1, 1, 0, 1))
