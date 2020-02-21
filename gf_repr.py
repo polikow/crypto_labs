@@ -38,6 +38,7 @@ def all_primes(pow, pretty=True):
 
 
 def table_str(k, pol):
+    pol, = convert_pols(pol)
     headers, table = mult_table(k, pol)
     headers = [pol_str(header) for header in headers]
     width = len(max(headers, key=len))
@@ -56,7 +57,7 @@ def table_str(k, pol):
             new_buf.append('{:^{width}}|'.format(header, width=width) + row)
     new_buf.append('\n')
 
-    print('\n'.join(
+    print('\n', '\n'.join(
         ['Таблица умножения в GF(2{}) c образующим многочленом {} ({})'.format(superscript(k), pol_01(pol),
                                                                                pol_str(pol))]
         + new_buf))
@@ -68,7 +69,7 @@ def primitive_elements(k, pol):
     for i, elem in enumerate(gf_elements(k, pol)):
         buf.append("x{} = {} {}"
                    .format(superscript(i, one=True), pol_str(elem),
-                        ' примитивный' if mutually_prime(2 ** k - 1, i) else ''))
+                           ' примитивный' if mutually_prime(2 ** k - 1, i) else ''))
 
     print("\nпримитивные элементы ({} эл-ов) GF(2{}) для образующего многочлена {} ({})"
           .format(euler(2 ** k - 1), superscript(k), pol_01(pol), pol_str(pol)))
@@ -76,31 +77,64 @@ def primitive_elements(k, pol):
 
 
 def main():
-    divide(1011, 11, False)
-    multiply(1011, 11, False)
+    divide(1011, 11)
+    multiply(1011, 11)
+    print('\n')
     divide(101, 11)
+    multiply(101, 11)
+    print('\n')
     divide(1101, 101)
+    multiply(1101, 101)
+    print('\n')
     divide(10101, 111)
+    multiply(10101, 111)
+    print('\n')
     divide(10111, 11)
+    multiply(10111, 11)
+    print('\n')
     divide(101101, 111)
+    multiply(101101, 111)
 
+    print('\n')
     gcd(100001, 1111)
     gcd(110001, 11011)
     gcd(10001, 101101)
     gcd(111010, 101110)
 
-    primitive_elements(1, 111)
+    pols = [11, 111,
+            101, 1010,
+            1011, 1100,
+            1101, 1110,
+            1111, 10001,
+            10011, 10100,
+            10101, 1111,
+            11001, 11101,
+            11111, 101011,
+            101101, 111001,
+            111111,
+            110101, 101001,
+            100101, 100011]
+    pols = convert_pols(*pols)
+
+    print('\n')
+    for i, pol in enumerate(pols):
+        is_pr, a = is_prime(pol)
+        is_prim = is_primitive(pol)
+        text = ''
+        if not is_pr and isinstance(a, tuple):
+            text = '= ({})({})'.format(pol_str(a[0]), pol_str(a[1]))
+
+        print('{}) {} {} {}'.format(i + 1, pol_str(pol),
+                                    'неприводимый' if is_pr else text,
+                                    'и примитивный' if is_prim else ''))
+
+    table_str(3, 1101)
+    table_str(3, 1011)
+
     primitive_elements(3, 1101)
     primitive_elements(3, 1011)
-
-    # mult_str2((1, 1, 1, 0), (1, 0, 1))
-    # div_str((1, 1, 1, 0), (1, 0, 1))
-    # table_str(3, (1, 1, 0, 1))
-    # table_str(3, (1, 0, 1, 1))
-    # table_str(4, (1, 1, 0, 0, 1))
-    # primitive_elements(3, (1, 1, 0, 1))
-    # primitive_elements(4, (1, 1, 0, 0, 1))
-    # primitive_elements(4, (1, 0, 0, 1, 1))
+    primitive_elements(4, 11001)
+    primitive_elements(4, 10011)
 
 
 if __name__ == '__main__':

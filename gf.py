@@ -51,7 +51,6 @@ def rem_zeros(pol):
 
 
 def div(pol1, pol2):
-    P = power(pol1)
     p1, p2 = power(pol1), power(pol2)
 
     if p2 == 0 and pol2[0] == 0:
@@ -66,7 +65,7 @@ def div(pol1, pol2):
         new_p = power(new_pol)
 
         if new_pol == (0,):
-            quotient += (1,)
+            quotient += (1,) + (0,) * (p1 - p2)
             pol1, p1 = new_pol, new_p
             break
 
@@ -75,7 +74,6 @@ def div(pol1, pol2):
         else:
             zeros = 0
         if new_p + 1 < zeros:
-            ...
             if removed <= p2 + 1:
                 zeros -= 1
         if zeros > (p1 - p2):
@@ -83,7 +81,6 @@ def div(pol1, pol2):
         quotient += (1,) + (0,) * zeros
         pol1, p1 = new_pol, new_p
 
-    assert power(quotient) + power(pol2) == P
     return quotient, pol1
 
 
@@ -130,23 +127,23 @@ def is_prime(pol):
     """Неприводимый ли многочлен"""
     p = power(pol)
     if p == 0:
-        return False
+        return False, None
     if p == 1:
-        return True
+        return True, None
 
     max_p = int(math.sqrt(p) + 1)
 
     for pol2 in generate_pols(max_p, min=1):
-        _, rem = div(pol, pol2)
+        quotient, rem = div(pol, pol2)
         if rem == (0,):
-            return False
-    return True
+            return False, (quotient, pol2)
+    return True, None
 
 
 def primes(pow):
     """Генератор неприводимых многочленов"""
     for pol in generate_pols(pow, min=1):
-        if is_prime(pol):
+        if is_prime(pol)[0]:
             yield pol
 
 
@@ -158,8 +155,7 @@ def mutually_prime(a, b):
 
 
 def is_primitive(pol):
-    """Неправильно работает"""
-    if not is_prime(pol):
+    if not is_prime(pol)[0]:
         return False
 
     n = power(pol)
