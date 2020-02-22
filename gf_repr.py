@@ -76,6 +76,11 @@ def primitive_elements(k, pol):
     print('\n'.join(buf), '\n')
 
 
+def is_primitive_str(pol):
+    pol, = convert_pols(pol)
+    print('{} - примитивен'.format(pol_str(pol)) if is_primitive(pol) else '{} - НЕ примитивен'.format(pol_str(pol)))
+
+
 def main():
     divide(1011, 11)
     multiply(1011, 11)
@@ -136,6 +141,6 @@ def main():
     primitive_elements(4, 11001)
     primitive_elements(4, 10011)
 
-
-if __name__ == '__main__':
-    main()
+#
+# if __name__ == '__main__':
+#     main()
