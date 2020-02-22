@@ -1,82 +1,107 @@
-import gf
-from polynomial_repr import polynomial as pol_str, polynomial_01 as pol_01, mult_str, superscript, convert_pols
+import math
+
+from gf import sum_pols, power
+
+superscript_map = {
+    "0": "⁰", "1": "¹", "2": "²",
+    "3": "³", "4": "⁴", "5": "⁵",
+    "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹"}
+
+superscript_translation = str.maketrans(
+    ''.join(superscript_map.keys()),
+    ''.join(superscript_map.values()))
 
 
-def divide(a, b, pretty=True):
-    a, b = convert_pols(a, b)
-    q, r = gf.div(a, b)
-    if pretty:
-        a, b, q, r = pol_str(a), pol_str(b), pol_str(q), pol_str(r)
-        print("({})/({}) = ({}) {}".format(a, b, q, f'+ {r}' if r != '0' else ''))
+def superscript(num, one=False):
+    res = str(num).translate(superscript_translation)
+    if one:
+        return res
     else:
-        a, b, q, r = pol_01(a), pol_01(b), pol_01(q), pol_01(r)
-        print("{} / {} = {} {}".format(a, b, q, f'+ {r}' if r != '0' else ''))
+        return res if res != "¹" else ''
 
 
-def multiply(a, b, pretty=True):
-    a, b = convert_pols(a, b)
-    if pretty:
-        print('({})({}) = {}'.format(pol_str(a), pol_str(b), pol_str(gf.mult(a, b))))
-    else:
-        print('{} * {} = {}'.format(pol_01(a), pol_01(b), pol_01(gf.mult(a, b))))
+def digits(num):
+    for i in range(math.ceil(math.log(num, 10)) - 1, -1, -1):
+        yield (num // (10 ** i)) % 10
 
 
-def gcd(a, b, pretty=True):
-    a, b = convert_pols(a, b)
-    if pretty:
-        print('gcd({}, {}) = {}'.format(pol_str(a), pol_str(b), pol_str(gf.gcd_gf(a, b))))
-    else:
-        print('gcd({}, {}) = {}'.format(pol_01(a), pol_01(b), pol_01(gf.gcd_gf(a, b))))
+def only_01(pol):
+    for x in pol:
+        if not (x == 0 or x == 1):
+            raise Exception('беды с башкой')
 
 
-def primes(power, pretty=True):
-    for prime in gf.primes(power + 1):
-        if pretty:
-            print('{}) {}'.format(gf.power(prime), pol_str(prime)))
-        else:
-            print('{}) {}'.format(gf.power(prime), pol_01(prime)))
+def num_to_polynomial(num):
+    if not isinstance(num, int):
+        raise Exception('беды с башкой')
+
+    pol = tuple(digits(num))
+    only_01(pol)
+    return pol
 
 
-def multiplication_table(k, pol):
-    pol, = convert_pols(pol)
-    headers, table = gf.mult_table(k, pol)
-    headers = [pol_str(header) for header in headers]
-    width = len(max(headers, key=len))
-    table = [[pol_01(pol) for pol in row] for row in table]
-
-    buf = [''.join(['{:^{width}}'.format(header, width=width) for header in headers]),
-           '_' * width * len(headers)]
-    for row in table:
-        buf.append(''.join(['{:^{width}}'.format(pol, width=width) for pol in row]))
-
-    new_buf = []
-    for header, row in zip(['', '', ] + headers, buf):
-        if header == '':
-            new_buf.append('{:^{width}}'.format(header, width=width) + row)
-        else:
-            new_buf.append('{:^{width}}|'.format(header, width=width) + row)
-    new_buf.append('\n')
-
-    print('\n', '\n'.join(
-        ['Таблица умножения в GF(2{}) c образующим многочленом {} ({})'.format(superscript(k), pol_01(pol),
-                                                                               pol_str(pol))]
-        + new_buf))
+def plus(power, pol):
+    n = len(pol)
+    for x in pol[n - power:]:
+        if x == 1:
+            return True
+    return False
 
 
-def primitive_elements(k, pol):
-    pol, = convert_pols(pol)
+def enumeratedown(iterable):
+    n = len(iterable) - 1
+    for i, x in enumerate(iterable):
+        yield n - i, x
+
+
+def polynomial(pol: tuple):
+    if len(pol) == 1 and pol[0] == 0:
+        return '0'
+
     buf = []
-    for i, elem in enumerate(gf.gf_elements(k, pol)):
-        buf.append("x{} = {} {}"
-                   .format(superscript(i, one=True), pol_str(elem),
-                           ' примитивный' if gf.mutually_prime(2 ** k - 1, i) else ''))
+    for power, x in enumeratedown(pol):
+        if x == 1:
+            if power > 0:
+                buf.append('x')
+                buf.append(superscript(power))
+            else:
+                buf.append(str(x))
+            if plus(power, pol):
+                buf.append('+')
 
-    print("\nпримитивные элементы ({} эл-ов) GF(2{}) для образующего многочлена {} ({})"
-          .format(gf.euler(2 ** k - 1), superscript(k), pol_01(pol), pol_str(pol)))
-    print('\n'.join(buf), '\n')
+    return ''.join(buf)
 
 
-def is_primitive(pol):
-    pol, = convert_pols(pol)
-    print('{} - примитивен'.format(pol_str(pol)) if gf.is_primitive(pol) else '{} - НЕ примитивен'.format(pol_str(pol)))
+def polynomial_01(pol: tuple):
+    return ''.join([str(x) for x in pol])
 
+
+def mult_str(pol1, pol2):
+    length = power(pol1, pol2) + 1
+    buf_adds = []
+    pols = []
+    for n, x in enumerate(reversed(pol2)):
+        if x == 1:
+            pols.append(pol1 + (0,) * n)
+            buf_adds.append('{:>{length}}'.format(polynomial_01(pol1) + ' ' * n, length=length))
+    res = sum_pols(*pols) if len(pols) != 1 else pols[0]
+
+    buf = ['{:>{length}}'.format(polynomial_01(pol1), length=length),
+           '{:>{length}}'.format(polynomial_01(pol2), length=length)]
+    if len(buf_adds) > 1:
+        buf.append('-' * length)
+        buf += buf_adds
+    buf.append('-' * length)
+    buf.append('{:>{length}}'.format(polynomial_01(res), length=length))
+    return '\n'.join(buf)
+
+
+def convert_pols(*pols):
+    res = []
+    for pol in pols:
+        if not isinstance(pol, tuple):
+            res.append(num_to_polynomial(pol))
+        else:
+            res.append(pol)
+
+    return res
