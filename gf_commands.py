@@ -1,5 +1,6 @@
 import gf
 from gf_repr import polynomial as pol_str, polynomial_01 as pol_01, superscript, convert_pols
+from primes import primes as file_primes
 
 
 def add(a, b, pretty=True):
@@ -48,12 +49,19 @@ def mod(a, b, pretty=True):
     print(f'{a} mod {b} = {res}')
 
 
-def primes(power, pretty=True):
+def eval_primes(power, pretty=True):
     convert = pol_str if pretty else pol_01
 
     for prime in gf.primes(power):
         if pretty:
             print(f'{gf.power(prime)}) {convert(prime)}')
+
+
+def primes(power, pretty=True):
+    convert = pol_str if pretty else pol_01
+
+    for i, prime in enumerate(file_primes[power]):
+        print(f'{i + 1}) {convert(prime)}')
 
 
 def multiplication_table(k, pol):

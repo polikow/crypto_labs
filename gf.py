@@ -211,7 +211,7 @@ def gf_elements(k, pol):
     return pols
 
 
-def cycle(k, pol_power):
+def cycle_powers(k, pol_power):
     """Цикломатический класс для GF(2^k)"""
     if pol_power < 1:
         raise Exception('беды с башкой')
@@ -223,7 +223,7 @@ def cycle(k, pol_power):
 
 
 def cycle_sorted(k, pol_power):
-    return sorted(cycle(k, pol_power))
+    return sorted(cycle_powers(k, pol_power))
 
 
 def test(power):
