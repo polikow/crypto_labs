@@ -10,6 +10,8 @@ def main():
     primitive_elements(4, 11001)
     primitive_elements(4, 10011)
 
+    primitive_elements(4, 11001)
+
 
 if __name__ == '__main__':
     main()

@@ -24,13 +24,22 @@ def multiply(a, b, pretty=True):
 def gcd(a, b, pretty=True):
     a, b = convert_pols(a, b)
     if pretty:
-        print('gcd({}, {}) = {}'.format(pol_str(a), pol_str(b), pol_str(gf.gcd_gf(a, b))))
+        print('gcd({}, {}) = {}'.format(pol_str(a), pol_str(b), pol_str(gf.gcd(a, b))))
     else:
-        print('gcd({}, {}) = {}'.format(pol_01(a), pol_01(b), pol_01(gf.gcd_gf(a, b))))
+        print('gcd({}, {}) = {}'.format(pol_01(a), pol_01(b), pol_01(gf.gcd(a, b))))
+
+
+def mod(a, b, pretty=True):
+    a, b = convert_pols(a, b)
+    res = gf.mod(a, b)
+
+    convert = pol_str if pretty else pol_01
+    a, b, res = convert(a), convert(b), convert(res)
+    print(f'{a} mod {b} = {res}')
 
 
 def primes(power, pretty=True):
-    for prime in gf.primes(power + 1):
+    for prime in gf.primes(power):
         if pretty:
             print('{}) {}'.format(gf.power(prime), pol_str(prime)))
         else:
@@ -79,4 +88,3 @@ def primitive_elements(k, pol):
 def is_primitive(pol):
     pol, = convert_pols(pol)
     print('{} - примитивен'.format(pol_str(pol)) if gf.is_primitive(pol) else '{} - НЕ примитивен'.format(pol_str(pol)))
-

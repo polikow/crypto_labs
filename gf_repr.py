@@ -20,26 +20,6 @@ def superscript(num, one=False):
         return res if res != "¹" else ''
 
 
-def digits(num):
-    for i in range(math.ceil(math.log(num, 10)) - 1, -1, -1):
-        yield (num // (10 ** i)) % 10
-
-
-def only_01(pol):
-    for x in pol:
-        if not (x == 0 or x == 1):
-            raise Exception('беды с башкой')
-
-
-def num_to_polynomial(num):
-    if not isinstance(num, int):
-        raise Exception('беды с башкой')
-
-    pol = tuple(digits(num))
-    only_01(pol)
-    return pol
-
-
 def plus(power, pol):
     n = len(pol)
     for x in pol[n - power:]:
@@ -96,12 +76,63 @@ def mult_str(pol1, pol2):
     return '\n'.join(buf)
 
 
+def digits(num):
+    for i in map(int, str(num)):
+        yield i
+
+
+def only_01(pol):
+    for x in pol:
+        if not (x == 0 or x == 1):
+            raise Exception('беды с башкой')
+
+
+def num_to_polynomial(num):
+    if not isinstance(num, int):
+        raise Exception('неправильный')
+
+    pol = tuple(digits(num))
+    only_01(pol)
+    if len(pol) == 0:
+        pol = (num,)
+    return pol
+
+
+def str_to_polynomial(s):
+    if not isinstance(s, str):
+        raise Exception('неправильный тип')
+
+    elems = s.split('+')
+    powers = []
+    for el in elems:
+        try:
+            powers.append(int(el.replace('x', '')) if el.__contains__('x') else (0 if int(el) == 1 else None))
+        except ValueError:  # вероятнее всего el = 'x'
+            powers.append(1)
+    size = max(powers) + 1
+    res = [0] * size
+
+    for p in powers:
+        res[size - p - 1] = 1
+
+    return tuple(res)
+
+
 def convert_pols(*pols):
     res = []
     for pol in pols:
         if not isinstance(pol, tuple):
-            res.append(num_to_polynomial(pol))
+            if isinstance(pol, int):
+                res.append(num_to_polynomial(pol))
+            elif isinstance(pol, str):
+                res.append(str_to_polynomial(pol))
+            else:
+                raise Exception('неправильный тип')
         else:
             res.append(pol)
 
     return res
+
+
+if __name__ == '__main__':
+    print(convert_pols(101, 1, 0, 10, 'x2+x1+1', 'x3 + x1 + 1'))

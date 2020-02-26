@@ -1,5 +1,7 @@
 import itertools
 import math
+import primes
+from primes import is_prime_from_file, primes_from_file
 
 
 def add(pol1, pol2):
@@ -21,6 +23,18 @@ def mult(pol1, pol2):
             pols.append(pol1 + (0,) * n)
     res = sum_pols(*pols) if len(pols) != 1 else pols[0]
     return rem_zeros(res)[1]
+
+
+def mult_pols(pols: list):
+    if len(pols) < 1:
+        raise Exception('беды с башкой')
+
+    pol1 = pols.pop()
+    while len(pols) >= 1:
+        pol2 = pols.pop()
+        pol1 = mult(pol1, pol2)
+
+    return pol1
 
 
 def power(*pols):
@@ -54,7 +68,7 @@ def div(pol1, pol2):
     p1, p2 = power(pol1), power(pol2)
 
     if p2 == 0 and pol2[0] == 0:
-        raise Exception('беды с башкой')
+        raise Exception('деление на 0')
 
     if p1 < p2:
         return (0,), pol1
@@ -110,11 +124,6 @@ def generate_power(k):
     return (1,) + (0,) * k
 
 
-def primitive_op(pol1, pol):
-    _, remainder = div(pol1, pol)
-    return remainder
-
-
 def euler(a):
     res = 0
     for num in range(1, a + 1):
@@ -140,11 +149,19 @@ def is_prime(pol):
     return True, None
 
 
-def primes(pow):
+def primes(power):
     """Генератор неприводимых многочленов"""
-    for pol in generate_pols(pow, min=1):
+    for pol in generate_pols(power + 1, min=1):
         if is_prime(pol)[0]:
             yield pol
+
+
+def primes_dict(power):
+    res = {i: [] for i in range(1, power + 1, 1)}
+    for pol in primes(power + 1):
+        pols = res.get(power(pol))
+        pols.append(pol)
+    return res
 
 
 def mutually_prime(a, b):
@@ -171,17 +188,17 @@ def is_primitive(pol):
     return True
 
 
-def gcd_gf(pol1, pol2):
+def gcd(pol1, pol2):
     """НОД для полиномов по АЕ"""
     p1, p2 = power(pol1), power(pol2)
     if p1 < p2:
-        return gcd_gf(pol2, pol1)
+        return gcd(pol2, pol1)
     else:
         quotient, remainder = div(pol1, pol2)
         if remainder == (0,):
             return pol2
         else:
-            return gcd_gf(pol2, remainder)
+            return gcd(pol2, remainder)
 
 
 def gf_elements(k, pol):
@@ -192,6 +209,32 @@ def gf_elements(k, pol):
         _, remainder = div((1,) + (0,) * i, pol)
         pols.append(remainder)
     return pols
+
+
+def cycle(k, pol_power):
+    """Цикломатический класс для GF(2^k)"""
+    if pol_power < 1:
+        raise Exception('беды с башкой')
+
+    max = 2 ** k
+    for i in range(k):
+        power = pol_power * 2 ** i
+        yield power if power < max else power % (max - 1)
+
+
+def cycle_sorted(k, pol_power):
+    return sorted(cycle(k, pol_power))
+
+
+def test(power):
+    for p in range(1, power + 1, 1):
+        primes = primes_from_file(p)
+        print(f'{primes} = {mult_pols(primes)}')
+
+
+def mod(pol1, pol2):
+    _, remainder = div(pol1, pol2)
+    return remainder
 
 
 if __name__ == '__main__':
