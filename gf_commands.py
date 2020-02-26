@@ -5,28 +5,29 @@ from gf_repr import polynomial as pol_str, polynomial_01 as pol_01, mult_str, su
 def divide(a, b, pretty=True):
     a, b = convert_pols(a, b)
     q, r = gf.div(a, b)
-    if pretty:
-        a, b, q, r = pol_str(a), pol_str(b), pol_str(q), pol_str(r)
-        print("({})/({}) = ({}) {}".format(a, b, q, f'+ {r}' if r != '0' else ''))
-    else:
-        a, b, q, r = pol_01(a), pol_01(b), pol_01(q), pol_01(r)
-        print("{} / {} = {} {}".format(a, b, q, f'+ {r}' if r != '0' else ''))
+
+    convert = pol_str if pretty else pol_01
+    a, b, q, r = convert(a), convert(b), convert(q), convert(r)
+    r = f'+ {r}' if r != '0' else ''
+    print(f"{a} / {b} = {q} {r}")
 
 
 def multiply(a, b, pretty=True):
     a, b = convert_pols(a, b)
-    if pretty:
-        print('({})({}) = {}'.format(pol_str(a), pol_str(b), pol_str(gf.mult(a, b))))
-    else:
-        print('{} * {} = {}'.format(pol_01(a), pol_01(b), pol_01(gf.mult(a, b))))
+    res = gf.mult(a, b)
+
+    convert = pol_str if pretty else pol_01
+    a, b, res = convert(a), convert(b), convert(res)
+    print(f'{a} * {b} = {res}')
 
 
 def gcd(a, b, pretty=True):
     a, b = convert_pols(a, b)
-    if pretty:
-        print('gcd({}, {}) = {}'.format(pol_str(a), pol_str(b), pol_str(gf.gcd(a, b))))
-    else:
-        print('gcd({}, {}) = {}'.format(pol_01(a), pol_01(b), pol_01(gf.gcd(a, b))))
+    res = gf.gcd(a, b)
+
+    convert = pol_str if pretty else pol_01
+    a, b, res = convert(a), convert(b), convert(res)
+    print(f'gcd({a}, {b}) = {res}')
 
 
 def mod(a, b, pretty=True):
@@ -39,11 +40,11 @@ def mod(a, b, pretty=True):
 
 
 def primes(power, pretty=True):
+    convert = pol_str if pretty else pol_01
+
     for prime in gf.primes(power):
         if pretty:
-            print('{}) {}'.format(gf.power(prime), pol_str(prime)))
-        else:
-            print('{}) {}'.format(gf.power(prime), pol_01(prime)))
+            print(f'{gf.power(prime)}) {convert(prime)}')
 
 
 def multiplication_table(k, pol):
