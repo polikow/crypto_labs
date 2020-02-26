@@ -2,6 +2,15 @@ import gf
 from gf_repr import polynomial as pol_str, polynomial_01 as pol_01, superscript, convert_pols
 
 
+def add(a, b, pretty=True):
+    a, b = convert_pols(a, b)
+    res = gf.add(a, b)
+
+    convert = pol_str if pretty else pol_01
+    a, b, res = convert(a), convert(b), convert(res)
+    print(f'{a} + {b} = {res}')
+
+
 def divide(a, b, pretty=True):
     a, b = convert_pols(a, b)
     q, r = gf.div(a, b)
