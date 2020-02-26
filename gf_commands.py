@@ -1,5 +1,5 @@
 import gf
-from gf_repr import polynomial as pol_str, polynomial_01 as pol_01, mult_str, superscript, convert_pols
+from gf_repr import polynomial as pol_str, polynomial_01 as pol_01, superscript, convert_pols
 
 
 def divide(a, b, pretty=True):
