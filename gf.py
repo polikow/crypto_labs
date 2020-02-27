@@ -1,7 +1,9 @@
 import itertools
 import math
+from functools import reduce
+
 import primes
-from primes import is_prime_from_file, primes_from_file
+from primes import primes_from_file
 
 
 def add(pol1, pol2):
@@ -21,20 +23,9 @@ def mult(pol1, pol2):
     for n, x in enumerate(reversed(pol2)):
         if x == 1:
             pols.append(pol1 + (0,) * n)
-    res = sum_pols(*pols) if len(pols) != 1 else pols[0]
+
+    res = reduce(add, pols) if len(pols) > 0 else (0,)
     return rem_zeros(res)[1]
-
-
-def mult_pols(pols: list):
-    if len(pols) < 1:
-        raise Exception('беды с башкой')
-
-    pol1 = pols.pop()
-    while len(pols) >= 1:
-        pol2 = pols.pop()
-        pol1 = mult(pol1, pol2)
-
-    return pol1
 
 
 def power(*pols):
@@ -42,18 +33,6 @@ def power(*pols):
     for pol in pols:
         res += len(pol) - 1
     return res
-
-
-def sum_pols(*pols):
-    if len(pols) == 1:
-        if len(pols[0]) != 0:
-            return pols[0][0]
-        else:
-            return (0,)
-    if len(pols) == 0:
-        return (0,)
-    else:
-        return add(add(pols[0], pols[1]), sum_pols(pols[2:]))
 
 
 def rem_zeros(pol):
@@ -98,12 +77,12 @@ def div(pol1, pol2):
     return quotient, pol1
 
 
-def generate_pols(pow, min=0):
+def generate_pols(pow, start=0):
     pols = [rem_zeros(pol)[1] for pol in itertools.product((0, 1), repeat=pow)]
-    if min == 0:
+    if start == 0:
         return pols
     else:
-        return filter(lambda pol: 1 if power(pol) >= min else 0, pols)
+        return filter(lambda pol: 1 if power(pol) >= start else 0, pols)
 
 
 def mult_table_op(pol1, pol2, pol):
@@ -142,7 +121,7 @@ def is_prime(pol):
 
     max_p = int(math.sqrt(p) + 1)
 
-    for pol2 in generate_pols(max_p, min=1):
+    for pol2 in generate_pols(max_p, start=1):
         quotient, rem = div(pol, pol2)
         if rem == (0,):
             return False, (quotient, pol2)
@@ -151,7 +130,7 @@ def is_prime(pol):
 
 def primes(power):
     """Генератор неприводимых многочленов"""
-    for pol in generate_pols(power + 1, min=1):
+    for pol in generate_pols(power + 1, start=1):
         if is_prime(pol)[0]:
             yield pol
 
@@ -229,12 +208,26 @@ def cycle_sorted(k, pol_power):
 def test(power):
     for p in range(1, power + 1, 1):
         primes = primes_from_file(p)
-        print(f'{primes} = {mult_pols(primes)}')
+        print(f'{primes} = {reduce(mult, primes)}')
 
 
 def mod(pol1, pol2):
     _, remainder = div(pol1, pol2)
     return remainder
+
+
+def in_power(pol, power):
+    return reduce(mult, [pol for _ in range(power)])
+
+
+def sub(pol, sub):
+    """Подстановка в полином"""
+    pols = []
+    for n, x in enumerate(reversed(pol)):
+        if x == 1:
+            pols.append(in_power(sub, n))
+
+    return reduce(add, pols) if len(pols) > 0 else (0,)
 
 
 if __name__ == '__main__':

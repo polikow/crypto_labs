@@ -64,6 +64,29 @@ def primes(power, pretty=True):
         print(f'{i + 1}) {convert(prime)}')
 
 
+def find_cyclomatic_class_and_minimal_pol(pol, k, pol0):
+    pol, pol0 = convert_pols(pol, pol0)
+    pol_power = gf.power(pol)
+
+    powers = list(gf.cycle_powers(k, pol_power))
+    print('{{ {} }}'.format(', '.join([f'x{superscript(power)}' for power in powers])))
+
+    pols = []
+    for power in powers:
+        tmp = (1,) + (0,) * power
+        if power < k:
+            pols.append(tmp)
+        else:
+            quotient, remainder = gf.div(tmp, pol0)
+            pols.append(remainder)
+
+    print(pols)
+    print('{{ {} }}'.format(', '.join([pol_str(p) for p in pols])))
+
+
+find_cyclomatic_class_and_minimal_pol('x', 5, 'x5 + x2 + 1')
+
+
 def multiplication_table(k, pol):
     pol, = convert_pols(pol)
     headers, table = gf.mult_table(k, pol)
