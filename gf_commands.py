@@ -71,7 +71,7 @@ def is_primitive_smart(pol):
     primitive = True
     for i, element in enumerate(gf.gf_elements(k, pol)):
         print(f'x{superscript(i)} = {pol_str(element)}')
-        if i == 0 or i == 2**k - 1:
+        if i == 0 or i == 2 ** k - 1:
             continue
         else:
             if element == (1,):

@@ -10,10 +10,10 @@ def main():
     cyclomatic_classes('all', 5, 'x5 + x3 + x2 + x + 1')
 
     # они все примитивные
-    # is_primitive_smart(100101)
-    # is_primitive_smart(110111)
-    # is_primitive_smart(1011011)
-    # is_primitive_smart(1100001)
+    is_primitive_smart(100101)
+    is_primitive_smart(110111)
+    is_primitive_smart(1011011)
+    is_primitive_smart(1100001)
 
     # для демонстрации
     is_primitive_smart(1111)
