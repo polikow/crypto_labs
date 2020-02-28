@@ -108,7 +108,3 @@ def convert_pols(*pols):
             res.append(pol)
 
     return res
-
-
-if __name__ == '__main__':
-    print(convert_pols(101, 1, 0, 10, 'x2+x1+1', 'x3 + x1 + 1'))

@@ -64,27 +64,77 @@ def primes(power, pretty=True):
         print(f'{i + 1}) {convert(prime)}')
 
 
-def find_cyclomatic_class_and_minimal_pol(pol, k, pol0):
-    pol, pol0 = convert_pols(pol, pol0)
-    pol_power = gf.power(pol)
+def is_primitive_smart(pol):
+    pol, = convert_pols(pol)
+    k = gf.power(pol)
 
-    powers = list(gf.cycle_powers(k, pol_power))
-    print('{{ {} }}'.format(', '.join([f'x{superscript(power)}' for power in powers])))
-
-    pols = []
-    for power in powers:
-        tmp = (1,) + (0,) * power
-        if power < k:
-            pols.append(tmp)
+    primitive = True
+    for i, element in enumerate(gf.gf_elements(k, pol)):
+        print(f'x{superscript(i)} = {pol_str(element)}')
+        if i == 0 or i == 2**k - 1:
+            continue
         else:
-            quotient, remainder = gf.div(tmp, pol0)
-            pols.append(remainder)
+            if element == (1,):
+                primitive = False
+                break
 
-    print(pols)
-    print('{{ {} }}'.format(', '.join([pol_str(p) for p in pols])))
+    print('Примитивный' if primitive else 'Не примитивный', '\n')
 
 
-find_cyclomatic_class_and_minimal_pol('x', 5, 'x5 + x2 + 1')
+def cyclomatic_classes(pol1, k, pol0):
+    if pol1 == 'all':
+        pol0, = convert_pols(pol0)
+        classes = gf.all_cyclomatic_classes(k)
+    else:
+        pol1, pol0 = convert_pols(pol1, pol0)
+        pol_power = gf.power(pol1)
+        classes = [list(gf.cyclomatic_elems(k, pol_power))]
+
+    """вычисление элементов каждого класса"""
+    cyclomatic_classes = []
+    for class_ in classes:
+        cyclomatic_class = []
+        for el_power in class_:
+            tmp = (1,) + (0,) * el_power
+            if el_power < k:
+                cyclomatic_class.append(tmp)
+            else:
+                remainder = gf.mod(tmp, pol0)
+                cyclomatic_class.append(remainder)
+        cyclomatic_classes.append(cyclomatic_class)
+
+    factors = gf.factorize(k)
+
+    """нахождение минимальных многочленов"""
+    found = False
+    min_pols = {}
+    for factor in filter(lambda factor: gf.power(factor) == k, factors):
+        for cyclomatic_class in cyclomatic_classes:
+            for pol in filter(lambda pol: gf.power(pol) > 1, cyclomatic_class):
+                if gf.mod(gf.sub(factor, pol), pol0) == (0,):
+                    found = True
+                break
+            if found:
+                break
+        if found:
+            min_pols[factor] = cyclomatic_class
+            found = False
+
+    title = f'Цикломатический класс для многочлена {pol_str(pol1)}\n' if pol1 != 'all' else 'Цикломатические классы\n'
+    print(title, f'над полем GF(2{superscript(k)}) c образующим многочленом {pol_str(pol0)}')
+
+    factors_str = ''.join([f'({pol_str(pol)})' for pol in factors])
+    factorized = pol_str(convert_pols(f'x{2 ** k - 1} + 1')[0])
+    print(f'{factorized} = {factors_str}')
+
+    for class_, cyclomatic_class in zip(classes, cyclomatic_classes):
+        print('{{ {} }}'.format(', '.join([f'x{superscript(el)}' for el in class_])), end=' = ')
+        print('{{ {} }}'.format(', '.join([pol_str(p) for p in cyclomatic_class])), end=' ')
+        for factor, pols in min_pols.items():
+            if pols == cyclomatic_class:
+                print(f'для F{factors.index(factor) + 1} ({pol_str(factor)})')
+                break
+    print()
 
 
 def multiplication_table(k, pol):
@@ -119,7 +169,7 @@ def primitive_elements(k, pol):
     for i, elem in enumerate(gf.gf_elements(k, pol)):
         buf.append("x{} = {} {}"
                    .format(superscript(i, one=True), pol_str(elem),
-                           ' примитивный' if gf.mutually_prime(2 ** k - 1, i) else ''))
+                           ' примитивный' if gf.is_mutually_prime(2 ** k - 1, i) else ''))
 
     print("\nпримитивные элементы ({} эл-ов) GF(2{}) для образующего многочлена {} ({})"
           .format(gf.euler(2 ** k - 1), superscript(k), pol_01(pol), pol_str(pol)))

@@ -143,7 +143,7 @@ def primes_dict(power):
     return res
 
 
-def mutually_prime(a, b):
+def is_mutually_prime(a, b):
     """Взаимно простые числа"""
     if a == 0 or b == 0:
         return False
@@ -173,7 +173,7 @@ def gcd(pol1, pol2):
     if p1 < p2:
         return gcd(pol2, pol1)
     else:
-        quotient, remainder = div(pol1, pol2)
+        remainder = mod(pol1, pol2)
         if remainder == (0,):
             return pol2
         else:
@@ -183,14 +183,12 @@ def gcd(pol1, pol2):
 def gf_elements(k, pol):
     """Элементы поля 2^k для образующего многочлена pol"""
     n = 2 ** k
-    pols = []
     for i in range(n):
-        _, remainder = div((1,) + (0,) * i, pol)
-        pols.append(remainder)
-    return pols
+        remainder = mod((1,) + (0,) * i, pol)
+        yield remainder
 
 
-def cycle_powers(k, pol_power):
+def cyclomatic_elems(k, pol_power):
     """Цикломатический класс для GF(2^k)"""
     if pol_power < 1:
         raise Exception('беды с башкой')
@@ -202,7 +200,16 @@ def cycle_powers(k, pol_power):
 
 
 def cycle_sorted(k, pol_power):
-    return sorted(cycle_powers(k, pol_power))
+    return sorted(cyclomatic_elems(k, pol_power))
+
+
+def all_cyclomatic_classes(k):  # кроме последнего класса
+    classes = []
+    for i in range(1, 2 ** k):
+        class_ = cycle_sorted(k, i)
+        if class_ not in classes:
+            classes.append(class_)
+    return classes[:-1]
 
 
 def test(power):
@@ -217,7 +224,10 @@ def mod(pol1, pol2):
 
 
 def in_power(pol, power):
-    return reduce(mult, [pol for _ in range(power)])
+    if power == 0:
+        return (1,)
+    else:
+        return reduce(mult, [pol for _ in range(power)])
 
 
 def sub(pol, sub):
@@ -228,6 +238,22 @@ def sub(pol, sub):
             pols.append(in_power(sub, n))
 
     return reduce(add, pols) if len(pols) > 0 else (0,)
+
+
+def divisors(a):
+    for b in range(a, 0, -1):
+        if math.gcd(a, b) > 1:
+            yield b
+        elif b == 1:
+            yield b
+
+
+def factorize(k):
+    """Разложение x^2^k - 1 + 1 на многочлены"""
+    pols = []
+    for power in divisors(k):
+        pols += primes_from_file(power)
+    return list(filter(lambda pol: pol != (1, 0), pols))
 
 
 if __name__ == '__main__':
