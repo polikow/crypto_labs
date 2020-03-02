@@ -1,4 +1,7 @@
+import itertools
+
 from gf_repr import str_to_polynomial as old_kek
+from functools import reduce
 
 
 def str_to_polynomial(pol):
@@ -57,10 +60,6 @@ def lin_recur_shift(pol, state):
     return j - i
 
 
-def main():
-    lin_recur_shift('x4 + x + 1', (1, 0, 1, 0))
-
-
 def zad1_2():
     # задание 1
     parameters = [
@@ -77,6 +76,59 @@ def zad1_2():
         for i in range(n):
             print(psp_general(i, x0, a, c, m), end=' ')
         print()
+
+
+def m_sequence(seq: str):
+    for k in range(4, 1, -1):
+        try:
+            t = 2 ** k - 1
+            if seq.index(seq[:k], t) == t:
+                ones = reduce(lambda a, b: int(a) + int(b), list(seq[:t]))
+                if not (ones == 2 ** (k - 1)):
+                    continue
+
+                for sub in [''.join(s) for s in list(itertools.product(('0', '1'), repeat=k))][1:]:
+                    seq.index(sub)
+                return seq[:t]
+
+        except ValueError:
+            continue
+
+    return 'нет'
+
+
+def zad4():
+    sequences = [
+        '1110000101011001110000101011',
+        '1010110101011010101101010110',
+        '0000011101011100000011101011',
+        '0100100001111100100100001111',
+        '0011010111100010011010111100',
+
+        '0000011101011100000011101011',
+        '0100100001111100100100001111',
+        '1110000101011001110000101011',
+        '0011101001110100111010011101',
+        '0011010111100010011010111100',
+
+        '0000011101011100000011101011',
+        '0100100001111100100100001111',
+        '0011010111100010011010111100',
+        '1010110101011010101101010110',
+        '1010110101011010101101010110',
+
+        '1110000101011001110000101011',
+        '1010110101011010101101010110',
+        '0000011101011100000011101011',
+        '0100100001111100100100001111',
+        '0011010111100010011010111100',
+    ]
+    for i, seq in enumerate(sequences):
+        print(f'{i + 1} {m_sequence(seq)}')
+
+
+def main():
+    zad4()
 
 
 if __name__ == '__main__':
