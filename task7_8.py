@@ -22,60 +22,51 @@ def shift(f: list, state: list, g: int):
     return f, state
 
 
-def lin_recur_shift(pol, state):
-    pol = str_to_polynomial(pol)
+def lin_recur_shift(fun, state):
+    fun = str_to_polynomial(fun)
     f = ()
     prev_states = []
     prev_f = []
     prev_g = []
-    assert len(pol) == len(state)
+    assert len(fun) == len(state)
 
-    found_el = None
-    found = False
-    while not found:
+    found = None
+    while found is None:
         prev_states.append(state)
         prev_f.append(f)
+        g = reduce(lambda a, b: (a + b) % 2, (a * b for a, b in zip(fun, state)))
         prev_g.append(g)
 
-        g = (state[0] + state[1]) % 2
-        f, state = shift(f, state, g)
+        f = f + state[:1]
+        state = state[1:] + (g,)
+
         for prev in prev_states:
             if state == prev:
-                found = True
-                found_el = prev
+                found = prev
 
-    i = prev_states.index(found_el)
-    j = len(prev_states)
+    prev_states.append(state)
+    prev_f.append(f)
+    prev_g.append(reduce(lambda a, b: (a + b) % 2, (a * b for a, b in zip(fun, state))))
 
-    prev_f = [''.join(prev_f_) for prev_f_ in prev_f]
-    prev_states = [''.join(prev_state) for prev_state in prev_states]
+    i = prev_states.index(found)
+    j = len(prev_states) - 1
+
+    prev_f = [''.join((str(i) for i in prev_f_)) for prev_f_ in prev_f]
+    prev_states = [''.join((str(i) for i in prev_state)) for prev_state in prev_states]
 
     f_width = max([len(f) for f in prev_f])
     state_width = len(state)
 
-    for f, state, g in zip(prev_f, prev_states, prev_g):
-        print('{:>{f_width}}|{:>{state_width}}|{}'.format(f, state, g, f_width=f_width, state_width=state_width))
-
-    print('kek', j - i)
+    print(f'T = {j - i}')
+    print('{:^{f_width}}|{:>{state_width}}|{}'
+          .format('f(x)', ''.join((str(i) for i in fun)), 'g', f_width=f_width, state_width=state_width))
+    print('-' * (state_width + f_width + 3))
+    for n, (f, state, g) in enumerate(zip(prev_f, prev_states, prev_g)):
+        pointer = '<-' if n == i or n == j else ''
+        print('{:>{f_width}}|{:>{state_width}}|{} {}'
+              .format(f, state, g, pointer, f_width=f_width, state_width=state_width))
+    print()
     return j - i
-
-
-def zad1_2():
-    # задание 1
-    parameters = [
-        (4, 6, 7, 10),
-        (4, 4, 5, 9),
-        (7, 7, 7, 10),
-        (5, 5, 3, 8),
-        (5, 3, 3, 17),
-        (2, 7, 4, 9),
-        # (2, 13, 11, 24),
-    ]
-    n = 5
-    for x0, a, c, m in parameters:
-        for i in range(n):
-            print(psp_general(i, x0, a, c, m), end=' ')
-        print()
 
 
 def m_sequence(seq: str):
@@ -97,7 +88,36 @@ def m_sequence(seq: str):
     return 'нет'
 
 
-def zad4():
+def task1(n=5):
+    parameters = [
+        (4, 6, 7, 10),
+        (4, 4, 5, 9),
+        (7, 7, 7, 10),
+        (5, 5, 3, 8),
+        (5, 3, 3, 17),
+        (2, 7, 4, 9),
+    ]
+    for x0, a, c, m in parameters:
+        for i in range(n):
+            print(psp_general(i, x0, a, c, m), end=' ')
+        print()
+
+
+def task3():
+    parameters = [
+        ('x4 + x + 1', (1, 0, 1, 0)),
+        ('x5 + x3 + x', (1, 0, 1, 0, 1)),
+        ('x4 + x3 + 1', (1, 0, 1, 0)),
+        ('x5 + x2 + 1', (1, 0, 1, 0, 0)),
+        ('x4 + x3 + 1', (0, 1, 0, 1)),
+        ('x5 + x3 + x2 + x + 1', (0, 1, 1, 0, 1)),
+    ]
+
+    for f, state in parameters:
+        lin_recur_shift(f, state)
+
+
+def task4():
     sequences = [
         '1110000101011001110000101011',
         '1010110101011010101101010110',
@@ -127,9 +147,6 @@ def zad4():
         print(f'{i + 1} {m_sequence(seq)}')
 
 
-def main():
-    zad4()
-
-
-if __name__ == '__main__':
-    main()
+task1(10)
+task3()
+task4()
