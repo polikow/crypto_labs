@@ -1,5 +1,4 @@
-import itertools
-
+from itertools import product
 from gf_repr import str_to_polynomial as old_kek
 from functools import reduce
 
@@ -74,11 +73,11 @@ def m_sequence(seq: str):
         try:
             t = 2 ** k - 1
             if seq.index(seq[:k], t) == t:
-                ones = reduce(lambda a, b: int(a) + int(b), list(seq[:t]))
+                ones = reduce(lambda a, b: int(a) + int(b), seq[:t])
                 if not (ones == 2 ** (k - 1)):
                     continue
 
-                for sub in [''.join(s) for s in list(itertools.product(('0', '1'), repeat=k))][1:]:
+                for sub in [''.join(s) for s in list(product(('0', '1'), repeat=k))][1:]:
                     seq.index(sub)
                 return seq[:t]
 
