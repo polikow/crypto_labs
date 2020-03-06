@@ -68,7 +68,7 @@ def lin_recur_shift(fun, state):
     return j - i
 
 
-def m_sequence(seq: str):
+def m_sequence(seq: str) -> str:
     for k in range(4, 1, -1):
         try:
             t = 2 ** k - 1

@@ -2,7 +2,6 @@ import itertools
 import math
 from functools import reduce
 
-import primes
 from primes import primes_from_file
 
 
