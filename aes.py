@@ -2,6 +2,8 @@
 from bitstring import Bits
 from typing import List
 from aes_resources import *
+from functools import reduce
+from operator import xor
 
 
 def state_matrix(bits128: Bits) -> List[List[Bits]]:
@@ -36,6 +38,30 @@ def shift_rows(s: List[List[Bits]], inverse=False):
             s[i] = row[-i:] + row[:-i]
         else:
             s[i] = row[i:] + row[:i]
+
+
+def mix_columns(s: List[List[Bits]], inverse=False):
+    table = INV_MIX if inverse else MIX
+
+    for i in range(4):
+        c0 = s[0][i]
+        c1 = s[1][i]
+        c2 = s[2][i]
+        c3 = s[3][i]
+        ...
+
+
+def mult(a: Bits, b: Bits) -> Bits:
+    to_sum = []
+
+    for zeros, bit in enumerate(b[::-1]):
+        if bit:
+            to_sum.append(Bits(length=8 - zeros) + a + Bits(length=zeros))
+
+    s = reduce(xor, to_sum)
+    return s
+
+
 
 
 text_s = 'big лепеха'

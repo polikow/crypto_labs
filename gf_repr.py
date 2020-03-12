@@ -1,3 +1,5 @@
+from bitstring import Bits
+
 superscript_map = {
     "0": "⁰", "1": "¹", "2": "²",
     "3": "³", "4": "⁴", "5": "⁵",
@@ -94,6 +96,11 @@ def str_to_polynomial(s):
     return tuple(res)
 
 
+def bits_to_polynomial(bits):
+    num = int(bits.bin)
+    return num_to_polynomial(num)
+
+
 def convert_pols(*pols):
     res = []
     for pol in pols:
@@ -102,6 +109,8 @@ def convert_pols(*pols):
                 res.append(num_to_polynomial(pol))
             elif isinstance(pol, str):
                 res.append(str_to_polynomial(pol))
+            elif isinstance(pol, Bits):
+                res.append(bits_to_polynomial(pol))
             else:
                 raise Exception('неправильный тип')
         else:
