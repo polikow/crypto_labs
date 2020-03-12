@@ -1,12 +1,11 @@
 # реализовать хотя бы 1 раунд аес
-from bitstring import Bits
 from typing import List
 from aes_resources import *
 from functools import reduce
 from operator import xor
 
 
-def state_matrix(bits128: Bits) -> List[List[Bits]]:
+def bits_to_state(bits128: Bits) -> List[List[Bits]]:
     """Конвертация битов в матрицу состояний"""
     s = [[Bits(length=0)] * 4 for _ in range(4)]
 
@@ -18,9 +17,17 @@ def state_matrix(bits128: Bits) -> List[List[Bits]]:
     return s
 
 
-def sub_bytes(s: List[List[Bits]], inverse=False):
+def state_to_bits(s: List[List[Bits]]) -> Bits:
+    to_sum = []
+    for i in range(4):
+        for j in range(4):
+            to_sum.append(s[j][i])
+    return sum(to_sum)
+
+
+def sub_bytes(s: List[List[Bits]], reverse=False):
     """Обе подстановки"""
-    table = INV_SUB if inverse else SUB
+    table = INV_SUB if reverse else SUB
 
     for i in range(4):
         for j in range(4):
@@ -31,34 +38,32 @@ def sub_bytes(s: List[List[Bits]], inverse=False):
             s[j][i] = Bits(uint=sub, length=8)
 
 
-def shift_rows(s: List[List[Bits]], inverse=False):
+def shift_rows(s: List[List[Bits]], reverse=False):
     for i in (1, 2, 3):
         row = s[i]
-        if inverse:
+        if reverse:
             s[i] = row[-i:] + row[:-i]
         else:
             s[i] = row[i:] + row[:i]
 
 
-def mix_columns(s: List[List[Bits]], inverse=False):
+def mix_columns(s: List[List[Bits]], reverse=False):
     """Оба преобразования колонок"""
-    t = INV_MIX if inverse else MIX
+    table = INV_MIX if reverse else MIX
+    new_s = bits_to_state(Bits(length=128))
 
     for i in range(4):
         for j in range(4):
-            to_sum = []
-            for c in range(4):
-                a = s[c][j]
-                b = t[j][c]
-                to_sum.append(mult(a, b))
-            s[i][j] = reduce(xor, to_sum)
-            print()
+            new_s[i][j] = reduce(xor, [mult(s[c][j], table[i][c]) for c in range(4)])
+
+    for i in range(4):
+        s[i] = new_s[i]
 
 
 def add_round_key(s: List[List[Bits]], key: Bits):
     """XOR ключа с матрицей состояний"""
     assert key.len == 128
-    key = state_matrix(key)
+    key = bits_to_state(key)
 
     for i in range(4):
         for j in range(4):
@@ -86,29 +91,18 @@ def mult(a: Bits, b: Bits) -> Bits:
     zeros = 8 - s.len
     s = Bits(length=zeros) + s
     assert s.len == 8
-    print(f'{a} * {b} = {s}')
     return s
 
 
-def aes_round(s: List[List[Bits]], key: Bits, reverse=False):
-    sub_bytes(s, reverse)  # работает
-    shift_rows(s, reverse)  # работает
-    mix_columns(s, reverse)
+def aes_round(s: List[List[Bits]], key: Bits):
+    sub_bytes(s)
+    shift_rows(s)
+    mix_columns(s)
     add_round_key(s, key)
 
 
-# text_s = 'big лепеха'
-# key_s = 'small леха!?'
-
-# text_s = 'Thats my Kung Fu'
-key_s = 'Two One Nine Two'
-
-text = Bits(hex='0x00041214120412000C00131108231919')
-key = Bits(bytes(key_s, encoding='utf-8'))
-
-s = state_matrix(text)
-sub_bytes(s)  # работает
-shift_rows(s)  # работает
-mix_columns(s)
-# aes_round(s, key)
-# aes_round(s, key, reverse=True)
+def aes_round_reverse(s: List[List[Bits]], key: Bits):
+    add_round_key(s, key)
+    mix_columns(s, reverse=True)
+    shift_rows(s, reverse=True)
+    sub_bytes(s, reverse=True)

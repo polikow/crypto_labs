@@ -62,7 +62,7 @@ def des_round(data: Bits, key: Bits) -> Bits:
     return right + new_right
 
 
-def des_round_back(data: Bits, key: Bits) -> Bits:
+def des_round_reverse(data: Bits, key: Bits) -> Bits:
     assert len(data) == 64
     assert len(key) == 48
 
