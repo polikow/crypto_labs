@@ -41,33 +41,74 @@ def shift_rows(s: List[List[Bits]], inverse=False):
 
 
 def mix_columns(s: List[List[Bits]], inverse=False):
-    table = INV_MIX if inverse else MIX
+    """Оба преобразования колонок"""
+    t = INV_MIX if inverse else MIX
 
     for i in range(4):
-        c0 = s[0][i]
-        c1 = s[1][i]
-        c2 = s[2][i]
-        c3 = s[3][i]
-        ...
+        for j in range(4):
+            to_sum = []
+            for c in range(4):
+                a = s[c][j]
+                b = t[j][c]
+                to_sum.append(mult(a, b))
+            s[i][j] = reduce(xor, to_sum)
+            print()
+
+
+def add_round_key(s: List[List[Bits]], key: Bits):
+    """XOR ключа с матрицей состояний"""
+    assert key.len == 128
+    key = state_matrix(key)
+
+    for i in range(4):
+        for j in range(4):
+            s[i][j] = s[i][j] ^ key[i][j]
+
+
+def rem_zeros(bits: Bits) -> Bits:
+    zeros = bits.bin.index('1')
+    return bits[zeros:]
 
 
 def mult(a: Bits, b: Bits) -> Bits:
+    """Произведение полиномов в GF с образующим мн-ом (x8 + x4 + x3 + x + 1)"""
     to_sum = []
 
     for zeros, bit in enumerate(b[::-1]):
         if bit:
             to_sum.append(Bits(length=8 - zeros) + a + Bits(length=zeros))
+    s = rem_zeros(reduce(xor, to_sum))
 
-    s = reduce(xor, to_sum)
+    while s.len >= POLYNOMIAL.len:
+        zeros = s.len - POLYNOMIAL.len
+        s = rem_zeros(s ^ (POLYNOMIAL + Bits(length=zeros)))
+
+    zeros = 8 - s.len
+    s = Bits(length=zeros) + s
+    assert s.len == 8
+    print(f'{a} * {b} = {s}')
     return s
 
 
+def aes_round(s: List[List[Bits]], key: Bits, reverse=False):
+    sub_bytes(s, reverse)  # работает
+    shift_rows(s, reverse)  # работает
+    mix_columns(s, reverse)
+    add_round_key(s, key)
 
 
-text_s = 'big лепеха'
-key_s = 'small леха!?'
+# text_s = 'big лепеха'
+# key_s = 'small леха!?'
 
-text = Bits(bytes(text_s, encoding='utf-8'))
+# text_s = 'Thats my Kung Fu'
+key_s = 'Two One Nine Two'
+
+text = Bits(hex='0x00041214120412000C00131108231919')
 key = Bits(bytes(key_s, encoding='utf-8'))
 
 s = state_matrix(text)
+sub_bytes(s)  # работает
+shift_rows(s)  # работает
+mix_columns(s)
+# aes_round(s, key)
+# aes_round(s, key, reverse=True)
