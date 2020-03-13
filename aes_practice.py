@@ -2,8 +2,8 @@ from aes import *
 
 from bitstring import Bits
 
-text_s = 'big лепеха'
-key_s = 'small леха!?'
+text_s = 'small леха!?'
+key_s = 'big лепеха'
 
 text = Bits(bytes(text_s, encoding='utf-8'))
 key = Bits(bytes(key_s, encoding='utf-8'))

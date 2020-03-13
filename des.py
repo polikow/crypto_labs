@@ -1,5 +1,5 @@
 # хотя бы 1 раунд дес и аес
-from des_resources import EXTENSION, S_BOX, PERMUTE
+from des_resources import *
 from bitstring import Bits, BitArray
 
 
@@ -18,7 +18,7 @@ def s_blocks(bits48: Bits) -> Bits:
     res = Bits(length=0)
 
     for i in range(8):
-        bits6 = bits48[i:i + 6]
+        bits6 = bits48[i * 6:i * 6 + 6]
         row = Bits([bits6[0], bits6[5]]).uint
         column = bits6[1:5].uint
         number = S_BOX[i][row][column]
