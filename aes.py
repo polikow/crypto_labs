@@ -75,7 +75,7 @@ def rem_zeros(bits: Bits) -> Bits:
     return bits[zeros:]
 
 
-def mult(a: Bits, b: Bits) -> Bits:
+def mult(a: Bits, b: Bits, base: Bits = POLYNOMIAL) -> Bits:
     """Произведение полиномов в GF с образующим мн-ом (x8 + x4 + x3 + x + 1)"""
     to_sum = []
 
@@ -84,9 +84,9 @@ def mult(a: Bits, b: Bits) -> Bits:
             to_sum.append(Bits(length=8 - zeros) + a + Bits(length=zeros))
     s = rem_zeros(reduce(xor, to_sum))
 
-    while s.len >= POLYNOMIAL.len:
-        zeros = s.len - POLYNOMIAL.len
-        s = rem_zeros(s ^ (POLYNOMIAL + Bits(length=zeros)))
+    while s.len >= base.len:
+        zeros = s.len - base.len
+        s = rem_zeros(s ^ (base + Bits(length=zeros)))
 
     zeros = 8 - s.len
     s = Bits(length=zeros) + s

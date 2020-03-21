@@ -1,7 +1,10 @@
 from bitstring import Bits
 from typing import List
+from os import urandom
 
-# взял константы отсюда https://ru.bitcoinwiki.org/wiki/SHA-512
+# тест https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Standards-and-Guidelines/documents/examples/SHA512.pdf
+# константы https://ru.bitcoinwiki.org/wiki/SHA-512
+# на англ https://slideplayer.com/slide/7897611/ http://www.iwar.org.uk/comsec/resources/cipher/sha256-384-512.pdf
 INITIAL = sum(Bits(uint=h, length=64) for h in
               [0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
                0x510e527fade682d1, 0x9b05688c2b3e6c1f, 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179]
@@ -42,8 +45,9 @@ def padding(data: Bits) -> Bits:
     return data + padding + data_length
 
 
-def extend_block(block: Bits) -> List[Bits]:
+def extend_block(block: Bits, show=False) -> List[Bits]:
     """Блок 1024бит (16 слов) -> 5120бит (80 слов)"""
+    assert block.len == 1024
     words = parts(block, 64)  # изначальные 16 слов
 
     while len(words) != 80:
@@ -51,14 +55,26 @@ def extend_block(block: Bits) -> List[Bits]:
         w1 = words[i - 16]
         w2 = rot_shift(words[i - 15], 1, 8, 7)
         w3 = words[i - 7]
-        w4 = rot_shift(words[i - 12], 19, 61, 6)
+        w4 = rot_shift(words[i - 2], 19, 61, 6)  # ошибка в книжке
         words.append(w1 ^ w2 ^ w3 ^ w4)
+
+        if show and i == 17:
+            print('Слова')
+            print('\n'.join(
+                [f'{i:>2}) {word} {f"= {w1.hex} + {w2.hex} + {w3.hex} + {w4.hex}" if i == 17 else ""}' for i, word in
+                 enumerate(words)]))
 
     return words
 
 
-def rot_shift(word: Bits, a: int, b: int, c: int) -> Bits:
-    return (word >> a) ^ (word >> b) ^ (word << c)
+def rot_shift(word: Bits, a: int, b: int, c: int) -> Bits:  # ошибка в книжке
+    """s s r"""
+    return right_rot(word, a) ^ right_rot(word, b) ^ (word >> c)
+
+
+def right_rot(a: Bits, n: int) -> Bits:
+    """Циклическое перемещение"""
+    return a[-n:] + a[:-n]
 
 
 def major_sum(a: Bits, b: Bits, c: Bits) -> Bits:
@@ -69,8 +85,12 @@ def conditional_sum(a: Bits, b: Bits, c: Bits) -> Bits:  # ошибка в кн�
     return (a & b) ^ (~a & c)
 
 
-def cyclic_move(a: Bits) -> Bits:
-    return (a >> 28) ^ (a >> 34) ^ (a >> 39)
+def rotate_a(a: Bits) -> Bits:
+    return right_rot(a, 28) ^ right_rot(a, 34) ^ right_rot(a, 39)
+
+
+def rotate_e(e: Bits) -> Bits:
+    return right_rot(e, 14) ^ right_rot(e, 18) ^ right_rot(e, 41)
 
 
 def mod_sum(*args: Bits) -> Bits:
@@ -90,8 +110,8 @@ def sha512_round(digest: Bits, w: Bits, k: Bits) -> Bits:
     assert digest.len == 512
     a, b, c, d, e, f, g, h = parts(digest, 64)
 
-    mix1 = mod_sum(major_sum(a, b, c), cyclic_move(a))
-    mix2 = mod_sum(conditional_sum(e, f, g), cyclic_move(e), h, w, k)
+    mix1 = mod_sum(major_sum(a, b, c), rotate_a(a))
+    mix2 = mod_sum(h, conditional_sum(e, f, g), rotate_e(e), w, k)
     x = mod_sum(mix1, mix2)
     y = mod_sum(mix2, d)
 
@@ -100,12 +120,10 @@ def sha512_round(digest: Bits, w: Bits, k: Bits) -> Bits:
 
 def compress(digest: Bits, words: List[Bits]) -> Bits:
     """Функция сжатия. Применяется для каждого блока из 1024бит"""
-    block = None
-    for word, k in zip(words, K):
-        if block is None:
-            block = sha512_round(digest, word, k)
-        else:
-            block = sha512_round(block, word, k)
+    block = digest
+    for i, (word, k) in enumerate(zip(words, K)):
+        block = sha512_round(block, word, k)
+        print(f'{i}) {block[:64].hex}')
 
     return final_sum(digest, block)
 
@@ -114,17 +132,18 @@ def sha512(data: Bits) -> Bits:
     padded = padding(data)
     blocks = parts(padded, 1024)
 
-    digest = None
+    digest = INITIAL
     for block in blocks:
-        if digest is None:
-            words = extend_block(INITIAL)
-            digest = compress(INITIAL, words)
-        else:
-            words = extend_block(block)
-            digest = compress(digest, words)
+        words = extend_block(block)
+        digest = compress(digest, words)
 
     return digest
 
 
-text = Bits('a'.encode('utf-8'))
-digest = sha512(text)
+#
+# text = Bits('abc'.encode('utf-8'))
+# digest = sha512(text)
+# print(digest.hex)
+
+r = Bits(urandom(128))
+extend_block(r, show=True)
